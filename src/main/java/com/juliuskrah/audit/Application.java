@@ -1,15 +1,17 @@
 package com.juliuskrah.audit;
 
+import static org.springframework.web.reactive.function.BodyInserters.fromPublisher;
+import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
+import static org.springframework.web.reactive.function.server.RouterFunctions.route;
+
 import java.security.Principal;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.reactive.function.server.ServerResponse;
 
-import reactor.core.publisher.Mono;
-
-@RestController
 @SpringBootApplication
 public class Application {
 
@@ -17,8 +19,10 @@ public class Application {
 		SpringApplication.run(Application.class, args);
 	}
 	
-	@GetMapping("/")
-	Mono<String> index(Mono<Principal> user) {
-		return user.map(Principal::getName);
+	@Bean
+	RouterFunction<ServerResponse> helloRouter() {
+		return route(GET("/"), (request) -> ServerResponse.ok()
+				.body(fromPublisher(request.principal()
+						.map(Principal::getName), String.class)));
 	}
 }
