@@ -50,7 +50,7 @@ public class CustomerHandler {
 				String order = c.getOrder();
 				c = custom.get();
 				c.setOrder(order);
-				repository.save(custom.get());
+				repository.save(c);
 			} else
 				return ServerResponse.notFound().build();
 			return ServerResponse.noContent().build();
