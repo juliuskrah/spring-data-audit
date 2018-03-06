@@ -15,6 +15,15 @@
 ###############################################################################
 databaseChangeLog:
 - changeSet:
+    id: 000000
+    author: Julius
+    dbms: postgresql,oracle
+    changes:
+    - createSequence:
+        sequenceName: hibernate_sequence
+        startValue: 1000
+        incrementBy: 1
+- changeSet:
     id: 000001
     author: Julius
     changes:
@@ -40,21 +49,76 @@ databaseChangeLog:
               nullable: false
               unique: true
         - column:
-            name: order
+            name: item
             type: varchar(100)
-        - column:
-            name: created_by
-            type: varchar(50)
-            constraints:
-              nullable: false
         - column:
             name: created_date
             type: timestamp
             constraints:
               nullable: false
         - column:
-            name: last_modified_by
+            name: last_modified_date
+            type: timestamp
+- changeSet:
+    id: 000002
+    author: Julius
+    changes:
+    - createTable:
+        tableName: customer_aud
+        columns:
+        - column:
+            name: id
+            type: char(36)
+            constraints:
+              nullable: false
+        - column:
+            name: rev
+            type: bigint
+            constraints:
+              nullable: false
+        - column:
+            name: revtype
+            type: tinyint
+        - column:
+            name: name
             type: varchar(50)
+        - column:
+            name: email
+            type: varchar(60)
+        - column:
+            name: item
+            type: varchar(100)
+        - column:
+            name: created_date
+            type: timestamp
         - column:
             name: last_modified_date
             type: timestamp
+    - addPrimaryKey:
+        columnNames: id, rev
+        tableName: customer_aud
+- changeSet:
+    id: 000003
+    author: Julius
+    changes:
+    - createTable:
+        tableName: revinfo
+        columns:
+        - column:
+            name: rev
+            type: bigint
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+              nullable: false
+        - column:
+            name: revtstmp
+            type: bigint
+
+    - addForeignKeyConstraint:
+        baseColumnNames: rev
+        baseTableName: customer_aud
+        constraintName: fk_revinfo_rev
+        referencedColumnNames: rev
+        referencedTableName: revinfo
+            
