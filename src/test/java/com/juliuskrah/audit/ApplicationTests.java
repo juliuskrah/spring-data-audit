@@ -42,7 +42,6 @@ public class ApplicationTests {
 	}
 
 	@Test
-	// TODO Add assertions
 	public void testAudits() {
 		// Save
 		doInJPA(this::entityManagerFactory, entityManager -> {
