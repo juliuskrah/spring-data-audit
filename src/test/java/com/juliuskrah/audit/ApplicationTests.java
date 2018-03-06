@@ -13,17 +13,14 @@ import javax.persistence.PersistenceUnit;
 import org.hibernate.envers.AuditReaderFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @SpringBootTest
 @SpringJUnitConfig
-@RequiredArgsConstructor(onConstructor_ = { @Autowired })
 public class ApplicationTests {
 
 	@PersistenceUnit
