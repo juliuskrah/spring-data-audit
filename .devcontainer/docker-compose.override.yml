@@ -1,0 +1,24 @@
+version: '3'
+services:
+  data-r2dbc:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+      args:
+        VARIANT: 15
+        INSTALL_MAVEN: "true"
+        INSTALL_GRADLE: "false"
+        INSTALL_NODE: "true"
+        MAVEN_VERSION: "3.6.3"
+        NODE_VERSION: "lts/*"
+    init: true
+    volumes:
+      # Forwards the local Docker socket to the container.
+      - /var/run/docker.sock:/var/run/docker.sock 
+      - m2:/root/.m2
+      - .:/workspaces/r2dbc:cached
+    network_mode: service:postgres
+    command: sleep infinity 
+
+volumes:
+  m2:

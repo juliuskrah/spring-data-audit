@@ -2,24 +2,19 @@ package com.juliuskrah.audit;
 
 import static java.time.LocalDateTime.now;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.csrf;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.springSecurity;
 import static org.springframework.web.reactive.function.client.ExchangeFilterFunctions.basicAuthentication;
 
-import java.util.Optional;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest
 public class ApplicationTests {
 	@Autowired
@@ -29,63 +24,47 @@ public class ApplicationTests {
 
 	private WebTestClient rest;
 
-	@Before
+	@BeforeEach
 	public void setup() {
-		this.rest = WebTestClient
-				.bindToApplicationContext(this.context)
-				.apply(springSecurity())
-				.configureClient()
-				.filter(basicAuthentication("julius", "secret"))
-				.build();
+		StepVerifier.create(repository.deleteAll()).verifyComplete();
+		this.rest = WebTestClient.bindToApplicationContext(this.context) //
+				.apply(springSecurity()).configureClient() //
+				.filter(basicAuthentication("julius", "secret")).build();
 	}
-	
+
 	@Test
 	public void customerWhenCreateThenCreatedByIsNotNull() {
 		Customer customer = new Customer();
 		customer.setName("Jack Sparrow");
 		customer.setEmail("jacksparrow@strangertides.com");
-		
-		this.rest
-			.mutateWith(csrf())
-			.post()
-			.uri("/customers")
-			.body(Mono.just(customer), Customer.class)
-			.exchange()
-			.expectStatus().isCreated();
-		
-		this.rest
-			.get()
-			.uri("/customers")
-			.exchange()
-			.expectStatus().isOk()
-			.expectBody()
-			.jsonPath("$[0].createdBy").exists();
+
+		this.rest.post().uri("/customers/") //
+				.body(Mono.just(customer), Customer.class).exchange() //
+				.expectStatus().isCreated();
+
+		this.rest.get().uri("/customers/").exchange() //
+				.expectStatus().isOk().expectBody().jsonPath("$[0].createdBy").exists();
 	}
-	
+
 	@Test
 	public void customerWhenUpdateThenLastModifiedDateIsNotNull() {
 		Customer customer = new Customer();
 		customer.setName("Elizabeth Swarn");
 		customer.setEmail("lizzyswarn@strangertides.com");
-		
-		repository.save(customer);
+
+		StepVerifier.create(repository.save(customer)).assertNext(c -> {
+			assertThat(c.getId()).isNotNull();
+			customer.setId(c.getId());
+		}).verifyComplete();
 		customer.setOrder("food stuff");
-		
-		this.rest
-			.mutateWith(csrf())
-			.put()
-			.uri("/customers/{id}", customer.getId())
-			.body(Mono.just(customer), Customer.class)
-			.exchange()
-			.expectStatus().isNoContent();
-		
-		this.rest
-			.get()
-			.uri("/customers/{id}", customer.getId())
-			.exchange()
-			.expectStatus().isOk()
-			.expectBody()
-			.jsonPath("$.lastModifiedBy").exists();
+
+		this.rest.put().uri("/customers/{id}", customer.getId()) //
+				.body(Mono.just(customer), Customer.class) //
+				.exchange().expectStatus().isOk();
+
+		this.rest.get().uri("/customers/{id}", customer.getId()) //
+				.exchange().expectStatus().isOk() //
+				.expectBody().jsonPath("$.lastModifiedBy").exists();
 	}
 
 	@Test
@@ -94,11 +73,13 @@ public class ApplicationTests {
 		customer.setName("James Gunn");
 		customer.setEmail("jamesgunn@gmail.com");
 
-		repository.save(customer);
+		StepVerifier.create(repository.save(customer)) //
+				.assertNext(c -> {
+					assertThat(c.getId()).isNotNull();
+					assertThat(c.getCreatedDate()).isNotNull();
+					assertThat(c.getCreatedDate()).isBefore(now());
+				}).verifyComplete();
 
-		assertThat(customer.getId()).isNotNull();
-		assertThat(customer.getCreatedDate()).isNotNull();
-		assertThat(customer.getCreatedDate()).isBefore(now());
 	}
 
 	@Test
@@ -107,17 +88,19 @@ public class ApplicationTests {
 		customer.setName("Tyler Perry");
 		customer.setEmail("tylerperry@gmail.com");
 
-		repository.save(customer);
-		Optional<Customer> c = repository.findById(customer.getId());
+		StepVerifier.create(repository.save(customer)).assertNext(c -> {
+			assertThat(c.getId()).isNotNull();
+			customer.setId(c.getId());
+		}).verifyComplete();
+		Mono<Customer> c = repository.findById(customer.getId()).flatMap(cus -> {
+			cus.setOrder("Samsung Galaxy");
+			return repository.save(cus);
+		});
 
-		assertThat(c.isPresent()).isTrue();
-
-		customer = c.get();
-		customer.setOrder("Samsung Galaxy");
-
-		customer = repository.save(customer);
-
-		assertThat(customer.getLastModifiedDate()).isAfter(customer.getCreatedDate());
+		StepVerifier.create(c).assertNext(cus -> {
+			assertThat(cus).isNotNull();
+			assertThat(cus.getLastModifiedDate()).isAfter(cus.getCreatedDate());
+		}).verifyComplete();
 	}
 
 }

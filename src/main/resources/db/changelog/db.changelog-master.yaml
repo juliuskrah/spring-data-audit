@@ -40,7 +40,7 @@ databaseChangeLog:
               nullable: false
               unique: true
         - column:
-            name: order
+            name: orders
             type: varchar(100)
         - column:
             name: created_by

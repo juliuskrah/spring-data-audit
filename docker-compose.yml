@@ -1,0 +1,9 @@
+version: "3"
+
+services:
+  postgres:
+    image: postgres:13.0-alpine
+    environment:
+      - POSTGRES_PASSWORD=r2dbc
+      - POSTGRES_USER=r2dbc
+      - POSTGRES_DB=r2dbc

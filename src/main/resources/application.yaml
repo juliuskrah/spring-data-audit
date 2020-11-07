@@ -3,3 +3,10 @@ spring:
     user:
       name: julius
       password: secret
+  r2dbc:
+    url: r2dbc:postgresql://localhost/r2dbc
+    username: r2dbc
+    password: r2dbc
+    pool:
+      max-size: 5
+debug: false
